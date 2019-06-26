@@ -44,12 +44,6 @@ bool SmartAI::IsAIControlled() const
 
 void SmartAI::StartPath(bool run/* = false*/, uint32 pathId/* = 0*/, bool repeat/* = false*/, Unit* invoker/* = nullptr*/, uint32 nodeId/* = 1*/)
 {
-    if (me->IsEngaged()) // no wp movement in combat
-    {
-        TC_LOG_ERROR("scripts.ai.sai", "SmartAI::StartPath: Creature wanted to start waypoint movement (pathId: %u) while in combat, ignoring. (%s)", pathId, me->GetGUID().ToString().c_str());
-        return;
-    }
-
     if (HasEscortState(SMART_ESCORT_ESCORTING))
         StopPath();
 
@@ -521,12 +515,6 @@ void SmartAI::InitializeAI()
 
     me->SetVisible(true);
 
-    if (!me->isDead())
-    {
-        GetScript()->ProcessEventsFor(SMART_EVENT_RESPAWN);
-        GetScript()->OnReset();
-    }
-
     _followGUID.Clear(); // do not reset follower on Reset(), we need it after combat evade
     _followDistance = 0;
     _followAngle = 0;
@@ -534,6 +522,17 @@ void SmartAI::InitializeAI()
     _followArrivedTimer = 1000;
     _followArrivedEntry = 0;
     _followCreditType = 0;
+}
+
+void SmartAI::JustAppeared()
+{
+    CreatureAI::JustAppeared();
+
+    if (me->isDead())
+        return;
+
+    GetScript()->ProcessEventsFor(SMART_EVENT_RESPAWN);
+    GetScript()->OnReset();
 }
 
 void SmartAI::JustReachedHome()
